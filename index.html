@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIWOR-AMP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(40, 40, 40, 0.7) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(40, 40, 40, 0.7) 0%, transparent 20%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 1px solid #333;
+            background: #0a0a0a;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+        
+        header {
+            padding: 20px;
+            background: #111;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 1rem;
+        }
+        
+        .loader {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        
+        .loader::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #f55;
+            font-size: 1.2rem;
+            background: #200;
+            border: 1px solid #500;
+            margin: 20px;
+        }
+        
+        .content {
+            display: none;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .netlabels-panel {
+            flex: 1;
+            min-width: 300px;
+            background: #111;
+            border-right: 1px solid #333;
+            padding: 15px;
+        }
+        
+        .netlabels-panel h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background: #333;
+            border-color: #666;
+        }
+        
+        .control-btn.active {
+            background: #004477;
+            border-color: #0066aa;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .search-box input:focus {
+            outline: 1px solid #555;
+        }
+        
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #000;
+            border: 1px solid #333;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #222;
+        }
+        
+        .autocomplete-item:hover {
+            background: #002244;
+        }
+        
+        .netlabel-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .netlabel-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .netlabel-list::-webkit-scrollbar-track {
+            background: #000;
+        }
+        
+        .netlabel-list::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+        
+        .netlabel-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .netlabel-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .netlabel-item:hover {
+            background: #222;
+            border-color: #444;
+        }
+        
+        .netlabel-item.selected {
+            background: #002244;
+            border-color: #004477;
+        }
+        
+        .netlabel-checkbox {
+            margin-right: 10px;
+            accent-color: #004477;
+        }
+        
+        .player-panel {
+            flex: 2;
+            min-width: 400px;
+            padding: 20px;
+            background: #0a0a0a;
+        }
+        
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .player-header h2 {
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+        }
+        
+        .now-playing {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #111;
+            border: 1px solid #333;
+        }
+        
+        .track-title {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+        }
+        
+        .track-artist {
+            color: #aaa;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #004477;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: #222;
+            border: 1px solid #444;
+            color: white;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            border-radius: 0;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #666;
+        }
+        
+        .btn-play {
+            background: #004477;
+            width: 55px;
+            height: 55px;
+            font-size: 1.4rem;
+            border: 1px solid #0066aa;
+        }
+        
+        .btn-play:hover {
+            background: #005588;
+            border-color: #0077bb;
+        }
+        
+        .btn-playing {
+            background: #004477;
+        }
+        
+        .icon {
+            filter: invert(1);
+            width: 20px;
+            height: 20px;
+        }
+        
+        .queue-panel {
+            margin-top: 30px;
+        }
+        
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .queue-header h3 {
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+        
+        .queue-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #111;
+            border: 1px solid #333;
+            padding: 5px;
+        }
+        
+        .queue-item {
+            padding: 8px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .queue-item.active {
+            color: #004477;
+            background: #001122;
+        }
+        
+        .queue-item.error {
+            color: #f55;
+            background: #200;
+        }
+        
+        .queue-item-info {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .queue-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn:hover {
+            color: #fff;
+        }
+        
+        .favorite-btn {
+            color: #aaa;
+        }
+        
+        .favorite-btn.favorited {
+            color: #ffcc00;
+        }
+        
+        .share-section {
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background: #111;
+            border: 1px solid #333;
+        }
+        
+        .share-input {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #333;
+            color: #aaa;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 68, 119, 0.9);
+            color: white;
+            border: 1px solid #004477;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: rgba(119, 0, 0, 0.9);
+            border: 1px solid #700;
+        }
+        
+        .stats {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #222;
+            border: 1px solid #333;
+            border-bottom: none;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background: #004477;
+            border-color: #0066aa;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        
+        .pagination-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .netlabels-panel, .player-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>SIWOR-AMP</h1>
+                <p class="subtitle">music archival</p>
+            </div>
+            <div class="stats" id="stats">
+                Loading...
+            </div>
+        </header>
+        
+        <div class="loader" id="loader">Loading music archive...</div>
+        <div class="error" id="error" style="display: none;"></div>
+        
+        <div class="content" id="content">
+            <div class="netlabels-panel">
+                <div class="tabs">
+                    <div class="tab active" data-tab="netlabels">Netlabels</div>
+                    <div class="tab" data-tab="search">Search Tracks</div>
+                    <div class="tab" data-tab="favorites">Favorites</div>
+                </div>
+                
+                <div class="tab-content active" id="netlabels-tab">
+                    <h2>Netlabels</h2>
+                    <div class="controls">
+                        <button class="control-btn" id="btnSelectAll">Select All</button>
+                        <button class="control-btn" id="btnDeselectAll">Deselect All</button>
+                        <button class="control-btn" id="btnShuffleAll">Shuffle All</button>
+                    </div>
+                    <div class="controls">
+                        <button class="control-btn sort-btn active" data-sort="name">A-Z</button>
+                        <button class="control-btn sort-btn" data-sort="count">By Count</button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="netlabelSearch" placeholder="Search netlabels...">
+                    </div>
+                    <div class="netlabel-list" id="netlabelList">
+                        <!-- Netlabels will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="search-tab">
+                    <h2>Search Tracks</h2>
+                    <div class="search-box">
+                        <input type="text" id="trackSearch" placeholder="Search tracks...">
+                        <div class="autocomplete-list" id="autocompleteList"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="control-btn" id="btnShuffleSearch">Shuffle Search Results</button>
+                    </div>
+                    <div class="netlabel-list" id="searchResults">
+                        <!-- Search results will be populated here -->
+                    </div>
+                    <div class="pagination" id="searchPagination">
+                        <button class="pagination-btn" id="btnPrevPage" disabled>Previous</button>
+                        <div class="pagination-info" id="paginationInfo">Page 1 of 1</div>
+                        <button class="pagination-btn" id="btnNextPage" disabled>Next</button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="favorites-tab">
+                    <h2>Favorites</h2>
+                    <div class="controls">
+                        <button class="control-btn" id="btnShuffleFavorites">Shuffle Favorites</button>
+                        <button class="control-btn" id="btnClearFavorites">Clear All</button>
+                    </div>
+                    <div class="netlabel-list" id="favoritesList">
+                        <!-- Favorites will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="player-panel">
+                <div class="player-header">
+                    <h2>PLAYER</h2>
+                    <button class="action-btn" id="btnClearSelection">Clear Selection</button>
+                </div>
+                
+                <div class="now-playing">
+                    <div class="track-title" id="trackTitle">Select netlabels to start</div>
+                    <div class="track-artist" id="trackArtist">-</div>
+                </div>
+                
+                <div class="player-controls">
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                    
+                    <div class="buttons">
+                        <button class="btn" id="btnPrev" title="Previous">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                            </svg>
+                        </button>
+                        <button class="btn" id="btnFavorite" title="Favorite">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="favoriteIcon">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-play" id="btnPlay" title="Play/Pause">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="playIcon">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="pauseIcon" style="display: none;">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        </button>
+                        <button class="btn" id="btnDownloadCurrent" title="Download Current">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                            </svg>
+                        </button>
+                        <button class="btn" id="btnNext" title="Next">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="queue-panel">
+                    <div class="queue-header">
+                        <h3>Play Queue (Showing 10 of <span id="queueTotal">0</span>)</h3>
+                        <div>
+                            <button class="action-btn" id="btnShuffle">Shuffle</button>
+                            <button class="action-btn" id="btnClearQueue">Clear</button>
+                        </div>
+                    </div>
+                    <div class="queue-list" id="queueList">
+                        <!-- Queue items will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="share-section">
+                    <p>Share this track: <button class="action-btn" id="btnShare">Copy Link</button></p>
+                    <input type="text" class="share-input" id="shareUrl" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">Link copied to clipboard!</div>
+    
+    <audio id="audioPlayer"></audio>
+    
+    <script>
+        // Global state
+        const state = {
+            netlabels: {},
+            tracks: [],
+            filteredNetlabels: [],
+            selectedNetlabels: new Set(),
+            currentTrackIndex: -1,
+            isPlaying: false,
+            queue: [],
+            trackErrors: new Set(),
+            sortBy: 'name',
+            favorites: new Set(),
+            searchResults: [],
+            currentTab: 'netlabels',
+            searchPage: 1,
+            searchPageSize: 20,
+            totalSearchPages: 1
+        };
+
+        // DOM elements
+        const elements = {
+            loader: document.getElementById('loader'),
+            error: document.getElementById('error'),
+            content: document.getElementById('content'),
+            netlabelSearch: document.getElementById('netlabelSearch'),
+            trackSearch: document.getElementById('trackSearch'),
+            autocompleteList: document.getElementById('autocompleteList'),
+            netlabelList: document.getElementById('netlabelList'),
+            searchResults: document.getElementById('searchResults'),
+            favoritesList: document.getElementById('favoritesList'),
+            trackTitle: document.getElementById('trackTitle'),
+            trackArtist: document.getElementById('trackArtist'),
+            progressContainer: document.getElementById('progressContainer'),
+            progress: document.getElementById('progress'),
+            currentTime: document.getElementById('currentTime'),
+            duration: document.getElementById('duration'),
+            btnPrev: document.getElementById('btnPrev'),
+            btnFavorite: document.getElementById('btnFavorite'),
+            btnPlay: document.getElementById('btnPlay'),
+            btnNext: document.getElementById('btnNext'),
+            btnDownloadCurrent: document.getElementById('btnDownloadCurrent'),
+            btnShuffle: document.getElementById('btnShuffle'),
+            btnClearQueue: document.getElementById('btnClearQueue'),
+            btnClearSelection: document.getElementById('btnClearSelection'),
+            btnSelectAll: document.getElementById('btnSelectAll'),
+            btnDeselectAll: document.getElementById('btnDeselectAll'),
+            btnShuffleAll: document.getElementById('btnShuffleAll'),
+            btnShuffleSearch: document.getElementById('btnShuffleSearch'),
+            btnShuffleFavorites: document.getElementById('btnShuffleFavorites'),
+            btnClearFavorites: document.getElementById('btnClearFavorites'),
+            btnShare: document.getElementById('btnShare'),
+            shareUrl: document.getElementById('shareUrl'),
+            queueList: document.getElementById('queueList'),
+            queueTotal: document.getElementById('queueTotal'),
+            audioPlayer: document.getElementById('audioPlayer'),
+            notification: document.getElementById('notification'),
+            stats: document.getElementById('stats'),
+            playIcon: document.getElementById('playIcon'),
+            pauseIcon: document.getElementById('pauseIcon'),
+            favoriteIcon: document.getElementById('favoriteIcon'),
+            btnPrevPage: document.getElementById('btnPrevPage'),
+            btnNextPage: document.getElementById('btnNextPage'),
+            paginationInfo: document.getElementById('paginationInfo')
+        };
+
+        // Load favorites from localStorage
+        function loadFavorites() {
+            try {
+                const favoritesJson = localStorage.getItem('lolicoreFavorites');
+                if (favoritesJson) {
+                    const favoritesArray = JSON.parse(favoritesJson);
+                    state.favorites = new Set(favoritesArray);
+                }
+            } catch (e) {
+                console.error('Error loading favorites:', e);
+            }
+        }
+
+        // Save favorites to localStorage
+        function saveFavorites() {
+            try {
+                const favoritesArray = Array.from(state.favorites);
+                localStorage.setItem('lolicoreFavorites', JSON.stringify(favoritesArray));
+            } catch (e) {
+                console.error('Error saving favorites:', e);
+            }
+        }
+
+        // Toggle favorite status for a track
+        function toggleFavorite(trackId) {
+            if (state.favorites.has(trackId)) {
+                state.favorites.delete(trackId);
+                showNotification('Removed from favorites');
+            } else {
+                state.favorites.add(trackId);
+                showNotification('Added to favorites');
+            }
+            saveFavorites();
+            renderFavorites();
+            updateFavoriteButton();
+            
+            // Update favorite button in queue if this track is currently playing
+            if (state.currentTrackIndex >= 0 && state.queue[state.currentTrackIndex].id === trackId) {
+                renderQueue();
+            }
+        }
+
+        // Update favorite button state
+        function updateFavoriteButton() {
+            if (state.currentTrackIndex >= 0) {
+                const track = state.queue[state.currentTrackIndex];
+                elements.btnFavorite.classList.toggle('favorited', isFavorited(track.id));
+            } else {
+                elements.btnFavorite.classList.remove('favorited');
+            }
+        }
+
+        // Check if a track is favorited
+        function isFavorited(trackId) {
+            return state.favorites.has(trackId);
+        }
+
+        // Parse URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const netlabels = params.get('netlabels');
+            return {
+                id: params.get('id'),
+                netlabels: netlabels ? netlabels.split(',') : []
+            };
+        }
+
+        // Format time from seconds to MM:SS
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            elements.notification.textContent = message;
+            elements.notification.classList.remove('error');
+            if (isError) {
+                elements.notification.classList.add('error');
+            }
+            elements.notification.classList.add('show');
+            setTimeout(() => {
+                elements.notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Parse track info from URL
+        function parseTrackInfo(url) {
+            // Extract filename from URL
+            const filename = url.split('/').pop().replace('.mp3', '');
+            
+            // Try to extract artist and title using common patterns
+            let artist = 'Unknown Artist';
+            let title = 'Unknown Track';
+            
+            // Pattern 1: "Number - Artist - Title"
+            const pattern1 = /(\d+\s*-\s*)?([^-]+?)\s*-\s*(.+)/;
+            // Pattern 2: "Artist - Title"
+            const pattern2 = /([^-]+?)\s*-\s*(.+)/;
+            
+            let match = filename.match(pattern1);
+            if (match && match[2] && match[3]) {
+                artist = match[2].trim();
+                title = match[3].trim();
+            } else {
+                match = filename.match(pattern2);
+                if (match && match[1] && match[2]) {
+                    artist = match[1].trim();
+                    title = match[2].trim();
+                } else {
+                    title = filename;
+                }
+            }
+            
+            return { artist, title };
+        }
+
+        // Extract netlabel from URL
+        function extractNetlabel(url) {
+            const match = url.match(/https:\/\/nnty\.fun\/downloads\/music\/lolicore\/([^\/]+)/);
+            return match ? match[1] : 'Unknown';
+        }
+
+        // Fuzzy search function
+        function fuzzySearch(query, text) {
+            query = query.toLowerCase();
+            text = text.toLowerCase();
+            
+            let queryIndex = 0;
+            let textIndex = 0;
+            
+            while (queryIndex < query.length && textIndex < text.length) {
+                if (query[queryIndex] === text[textIndex]) {
+                    queryIndex++;
+                }
+                textIndex++;
+            }
+            
+            return queryIndex === query.length;
+        }
+
+        // Search tracks
+        function searchTracks(query) {
+            if (!query || query.length < 2) {
+                return [];
+            }
+            
+            return state.tracks.filter(track => {
+                const searchString = `${track.artist} ${track.title} ${track.netlabel}`.toLowerCase();
+                return fuzzySearch(query, searchString);
+            });
+        }
+
+        // Show autocomplete suggestions
+        function showAutocompleteSuggestions(query) {
+            const results = searchTracks(query);
+            elements.autocompleteList.innerHTML = '';
+            
+            if (results.length === 0) {
+                elements.autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            // Show up to 10 results
+            const limitedResults = results.slice(0, 10);
+            
+            limitedResults.forEach(track => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = `${track.artist} - ${track.title} (${track.netlabel})`;
+                item.addEventListener('click', () => {
+                    playTrack(track);
+                    elements.trackSearch.value = '';
+                    elements.autocompleteList.style.display = 'none';
+                });
+                elements.autocompleteList.appendChild(item);
+            });
+            
+            elements.autocompleteList.style.display = 'block';
+        }
+
+        // Display search results with pagination
+        function displaySearchResults(query, page = 1) {
+            const results = searchTracks(query);
+            state.searchResults = results;
+            state.searchPage = page;
+            state.totalSearchPages = Math.ceil(results.length / state.searchPageSize);
+            
+            // Update pagination controls
+            updatePaginationControls();
+            
+            elements.searchResults.innerHTML = '';
+            
+            if (results.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'netlabel-item';
+                noResults.textContent = 'No results found';
+                elements.searchResults.appendChild(noResults);
+                return;
+            }
+            
+            // Calculate start and end indices for current page
+            const startIndex = (page - 1) * state.searchPageSize;
+            const endIndex = Math.min(startIndex + state.searchPageSize, results.length);
+            const pageResults = results.slice(startIndex, endIndex);
+            
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            pageResults.forEach(track => {
+                const item = document.createElement('div');
+                item.className = 'netlabel-item';
+                
+                const playBtn = document.createElement('button');
+                playBtn.className = 'action-btn';
+                playBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>';
+                playBtn.title = 'Play this track';
+                playBtn.addEventListener('click', () => {
+                    playTrack(track);
+                });
+                
+                const favoriteBtn = document.createElement('button');
+                favoriteBtn.className = `action-btn favorite-btn ${isFavorited(track.id) ? 'favorited' : ''}`;
+                favoriteBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+                favoriteBtn.title = isFavorited(track.id) ? 'Remove from favorites' : 'Add to favorites';
+                favoriteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(track.id);
+                    favoriteBtn.classList.toggle('favorited', isFavorited(track.id));
+                });
+                
+                const info = document.createElement('span');
+                info.textContent = `${track.artist} - ${track.title} (${track.netlabel})`;
+                
+                item.appendChild(playBtn);
+                item.appendChild(favoriteBtn);
+                item.appendChild(info);
+                
+                fragment.appendChild(item);
+            });
+            
+            elements.searchResults.appendChild(fragment);
+        }
+
+        // Update pagination controls
+        function updatePaginationControls() {
+            elements.btnPrevPage.disabled = state.searchPage <= 1;
+            elements.btnNextPage.disabled = state.searchPage >= state.totalSearchPages;
+            elements.paginationInfo.textContent = `Page ${state.searchPage} of ${state.totalSearchPages}`;
+        }
+
+        // Go to next page of search results
+        function nextSearchPage() {
+            if (state.searchPage < state.totalSearchPages) {
+                displaySearchResults(elements.trackSearch.value, state.searchPage + 1);
+            }
+        }
+
+        // Go to previous page of search results
+        function prevSearchPage() {
+            if (state.searchPage > 1) {
+                displaySearchResults(elements.trackSearch.value, state.searchPage - 1);
+            }
+        }
+
+        // Shuffle search results
+        function shuffleSearchResults() {
+            if (state.searchResults.length === 0) {
+                showNotification('No search results to shuffle', true);
+                return;
+            }
+            
+            // Clear current selection and add search results to queue
+            state.selectedNetlabels.clear();
+            state.queue = [...state.searchResults];
+            
+            // Shuffle the queue
+            shuffleQueue();
+            
+            // Play the first track
+            if (state.queue.length > 0) {
+                playTrack(state.queue[0], 0);
+            }
+            
+            showNotification('Shuffling search results');
+        }
+
+        // Shuffle favorites
+        function shuffleFavorites() {
+            if (state.favorites.size === 0) {
+                showNotification('No favorites to shuffle', true);
+                return;
+            }
+            
+            // Get favorite tracks
+            const favoriteTracks = state.tracks.filter(track => state.favorites.has(track.id));
+            
+            // Clear current selection and add favorites to queue
+            state.selectedNetlabels.clear();
+            state.queue = [...favoriteTracks];
+            
+            // Shuffle the queue
+            shuffleQueue();
+            
+            // Play the first track
+            if (state.queue.length > 0) {
+                playTrack(state.queue[0], 0);
+            }
+            
+            showNotification('Shuffling favorites');
+        }
+
+        // Clear favorites
+        function clearFavorites() {
+            state.favorites.clear();
+            saveFavorites();
+            renderFavorites();
+            showNotification('Favorites cleared');
+        }
+
+        // Render favorites
+        function renderFavorites() {
+            elements.favoritesList.innerHTML = '';
+            
+            if (state.favorites.size === 0) {
+                const noFavorites = document.createElement('div');
+                noFavorites.className = 'netlabel-item';
+                noFavorites.textContent = 'No favorites yet';
+                elements.favoritesList.appendChild(noFavorites);
+                return;
+            }
+            
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            state.tracks.forEach(track => {
+                if (state.favorites.has(track.id)) {
+                    const item = document.createElement('div');
+                    item.className = 'netlabel-item';
+                    
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'action-btn';
+                    playBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>';
+                    playBtn.title = 'Play this track';
+                    playBtn.addEventListener('click', () => {
+                        playTrack(track);
+                    });
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'action-btn favorite-btn favorited';
+                    removeBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+                    removeBtn.title = 'Remove from favorites';
+                    removeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFavorite(track.id);
+                        item.remove();
+                    });
+                    
+                    const info = document.createElement('span');
+                    info.textContent = `${track.artist} - ${track.title} (${track.netlabel})`;
+                    
+                    item.appendChild(playBtn);
+                    item.appendChild(removeBtn);
+                    item.appendChild(info);
+                    
+                    fragment.appendChild(item);
+                }
+            });
+            
+            elements.favoritesList.appendChild(fragment);
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            
+            state.currentTab = tabName;
+        }
+
+        // Fetch and parse the archive
+        async function fetchArchive() {
+            try {
+                const response = await fetch('https://archive.jklm.gay/archive.txt');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                
+                // Organize tracks by netlabel
+                const netlabels = {};
+                const tracks = [];
+                
+                lines.forEach((url, index) => {
+                    if (!url.includes('/music/lolicore/')) return;
+                    
+                    const netlabel = extractNetlabel(url);
+                    const trackInfo = parseTrackInfo(url);
+                    
+                    if (!netlabels[netlabel]) {
+                        netlabels[netlabel] = [];
+                    }
+                    
+                    const track = {
+                        id: index + 1,
+                        url: url,
+                        artist: trackInfo.artist,
+                        title: trackInfo.title,
+                        netlabel: netlabel
+                    };
+                    
+                    netlabels[netlabel].push(track);
+                    tracks.push(track);
+                });
+                
+                state.netlabels = netlabels;
+                state.tracks = tracks;
+                state.filteredNetlabels = Object.keys(netlabels).sort();
+                
+                // Load favorites
+                loadFavorites();
+                
+                // Update stats
+                elements.stats.textContent = `${Object.keys(netlabels).length} netlabels, ${tracks.length} tracks, ${state.favorites.size} favorites`;
+                
+                // Check if URL has a specific track ID or netlabels
+                const params = getUrlParams();
+                if (params.id) {
+                    const trackId = parseInt(params.id);
+                    const track = state.tracks.find(t => t.id === trackId);
+                    if (track) {
+                        // Add the track's netlabel to selected netlabels
+                        state.selectedNetlabels.add(track.netlabel);
+                        playTrack(track);
+                    }
+                }
+                
+                if (params.netlabels && params.netlabels.length > 0) {
+                    params.netlabels.forEach(netlabel => {
+                        if (state.netlabels[netlabel]) {
+                            state.selectedNetlabels.add(netlabel);
+                        }
+                    });
+                }
+                
+                renderNetlabels();
+                renderFavorites();
+                updateQueueFromSelection();
+                elements.loader.style.display = 'none';
+                elements.content.style.display = 'flex';
+                
+            } catch (error) {
+                elements.loader.style.display = 'none';
+                elements.error.style.display = 'block';
+                elements.error.textContent = `Error loading archive: ${error.message}`;
+                console.error('Error fetching archive:', error);
+            }
+        }
+
+        // Sort netlabels based on current sort setting
+        function sortNetlabels() {
+            if (state.sortBy === 'name') {
+                state.filteredNetlabels.sort();
+            } else if (state.sortBy === 'count') {
+                state.filteredNetlabels.sort((a, b) => {
+                    return state.netlabels[b].length - state.netlabels[a].length;
+                });
+            }
+        }
+
+        // Filter netlabels based on search
+        function filterNetlabels(searchTerm) {
+            if (!searchTerm) {
+                state.filteredNetlabels = Object.keys(state.netlabels);
+            } else {
+                const term = searchTerm.toLowerCase();
+                state.filteredNetlabels = Object.keys(state.netlabels)
+                    .filter(netlabel => netlabel.toLowerCase().includes(term));
+            }
+            sortNetlabels();
+            renderNetlabels();
+        }
+
+        // Render netlabels list
+        function renderNetlabels() {
+            elements.netlabelList.innerHTML = '';
+            
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            state.filteredNetlabels.forEach(netlabel => {
+                const item = document.createElement('div');
+                item.className = `netlabel-item ${state.selectedNetlabels.has(netlabel) ? 'selected' : ''}`;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'netlabel-checkbox';
+                checkbox.checked = state.selectedNetlabels.has(netlabel);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        state.selectedNetlabels.add(netlabel);
+                    } else {
+                        state.selectedNetlabels.delete(netlabel);
+                    }
+                    item.classList.toggle('selected', e.target.checked);
+                    updateQueueFromSelection();
+                    updateUrlParams();
+                });
+                
+                const label = document.createElement('span');
+                label.textContent = `${netlabel} (${state.netlabels[netlabel].length})`;
+                
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                fragment.appendChild(item);
+            });
+            
+            elements.netlabelList.appendChild(fragment);
+        }
+
+        // Update queue based on selected netlabels
+        function updateQueueFromSelection() {
+            if (state.selectedNetlabels.size === 0) {
+                state.queue = [];
+            } else {
+                // Use a more efficient approach to build the queue
+                state.queue = [];
+                state.selectedNetlabels.forEach(netlabel => {
+                    if (state.netlabels[netlabel]) {
+                        // Push all tracks at once instead of one by one
+                        state.queue.push.apply(state.queue, state.netlabels[netlabel]);
+                    }
+                });
+            }
+            
+            // Update URL without reloading
+            updateUrlParams();
+            
+            renderQueue();
+            
+            // Auto-shuffle if not playing a specific track
+            if (state.currentTrackIndex === -1 && state.queue.length > 0) {
+                shuffleQueue();
+            } else if (state.queue.length === 0) {
+                state.currentTrackIndex = -1;
+                elements.trackTitle.textContent = 'Select netlabels to start';
+                elements.trackArtist.textContent = '-';
+                elements.shareUrl.value = '';
+                pauseAudio();
+            }
+        }
+
+        // Update URL parameters
+        function updateUrlParams() {
+            const url = new URL(window.location);
+            
+            if (state.selectedNetlabels.size > 0) {
+                url.searchParams.set('netlabels', Array.from(state.selectedNetlabels).join(','));
+            } else {
+                url.searchParams.delete('netlabels');
+            }
+            
+            window.history.replaceState({}, '', url);
+        }
+
+        // Shuffle the queue
+        function shuffleQueue() {
+            if (state.queue.length === 0) return;
+            
+            // Save current track if playing
+            const currentTrack = state.currentTrackIndex >= 0 ? state.queue[state.currentTrackIndex] : null;
+            
+            // Fisher-Yates shuffle algorithm
+            for (let i = state.queue.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.queue[i], state.queue[j]] = [state.queue[j], state.queue[i]];
+            }
+            
+            // Find the current track in the shuffled queue
+            if (currentTrack) {
+                state.currentTrackIndex = state.queue.findIndex(t => t.id === currentTrack.id);
+            }
+            
+            renderQueue();
+            showNotification('Queue shuffled');
+        }
+
+        // Clear the queue
+        function clearQueue() {
+            state.queue = [];
+            state.currentTrackIndex = -1;
+            renderQueue();
+            pauseAudio();
+            elements.trackTitle.textContent = 'Select netlabels to start';
+            elements.trackArtist.textContent = '-';
+            elements.shareUrl.value = '';
+            showNotification('Queue cleared');
+        }
+
+        // Select all netlabels
+        function selectAllNetlabels() {
+            Object.keys(state.netlabels).forEach(netlabel => {
+                state.selectedNetlabels.add(netlabel);
+            });
+            renderNetlabels();
+            updateQueueFromSelection();
+            showNotification('All netlabels selected');
+        }
+
+        // Deselect all netlabels
+        function deselectAllNetlabels() {
+            state.selectedNetlabels.clear();
+            renderNetlabels();
+            updateQueueFromSelection();
+            showNotification('All netlabels deselected');
+        }
+
+        // Shuffle all netlabels
+        function shuffleAllNetlabels() {
+            selectAllNetlabels();
+            shuffleQueue();
+            showNotification('Shuffling all tracks');
+        }
+
+        // Render the queue (only show 10 items)
+        function renderQueue() {
+            elements.queueList.innerHTML = '';
+            elements.queueTotal.textContent = state.queue.length;
+            
+            if (state.queue.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'queue-item';
+                emptyMsg.textContent = 'No tracks in queue. Select netlabels to add tracks.';
+                elements.queueList.appendChild(emptyMsg);
+                return;
+            }
+            
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            // Determine which items to show (current position ± 5)
+            let startIndex = Math.max(0, state.currentTrackIndex - 4);
+            let endIndex = Math.min(state.queue.length, startIndex + 10);
+            
+            // Adjust if near the end
+            if (endIndex - startIndex < 10) {
+                startIndex = Math.max(0, endIndex - 10);
+            }
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const track = state.queue[i];
+                const item = document.createElement('div');
+                item.className = `queue-item ${i === state.currentTrackIndex ? 'active' : ''}`;
+                if (state.trackErrors.has(track.id)) {
+                    item.classList.add('error');
+                }
+                
+                const info = document.createElement('div');
+                info.className = 'queue-item-info';
+                info.textContent = `${track.artist} - ${track.title}`;
+                
+                const actions = document.createElement('div');
+                actions.className = 'queue-item-actions';
+                
+                const playBtn = document.createElement('button');
+                playBtn.className = 'action-btn';
+                playBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>';
+                playBtn.title = 'Play this track';
+                playBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playTrack(track, i);
+                });
+                
+                const favoriteBtn = document.createElement('button');
+                favoriteBtn.className = `action-btn favorite-btn ${isFavorited(track.id) ? 'favorited' : ''}`;
+                favoriteBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+                favoriteBtn.title = isFavorited(track.id) ? 'Remove from favorites' : 'Add to favorites';
+                favoriteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(track.id);
+                    favoriteBtn.classList.toggle('favorited', isFavorited(track.id));
+                    favoriteBtn.title = isFavorited(track.id) ? 'Remove from favorites' : 'Add to favorites';
+                });
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'action-btn';
+                downloadBtn.innerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+                downloadBtn.title = 'Download this track';
+                downloadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadTrack(track);
+                });
+                
+                actions.appendChild(playBtn);
+                actions.appendChild(favoriteBtn);
+                actions.appendChild(downloadBtn);
+                
+                item.appendChild(info);
+                item.appendChild(actions);
+                
+                fragment.appendChild(item);
+            }
+            
+            elements.queueList.appendChild(fragment);
+            updateFavoriteButton();
+        }
+
+        // Play a track
+        function playTrack(track, index = -1) {
+            if (index === -1) {
+                index = state.queue.findIndex(t => t.id === track.id);
+            }
+            
+            if (index === -1) {
+                // Track not in current queue, add it to queue
+                state.queue.unshift(track);
+                index = 0;
+                renderQueue();
+            }
+            
+            state.currentTrackIndex = index;
+            renderQueue();
+            
+            elements.trackTitle.textContent = track.title;
+            elements.trackArtist.textContent = track.artist;
+            elements.audioPlayer.src = track.url;
+            elements.audioPlayer.load();
+            
+            // Update share URL
+            const url = new URL(window.location);
+            url.searchParams.set('id', track.id);
+            if (state.selectedNetlabels.size > 0) {
+                url.searchParams.set('netlabels', Array.from(state.selectedNetlabels).join(','));
+            }
+            elements.shareUrl.value = url.toString();
+            
+            playAudio();
+        }
+
+        // Play audio
+        function playAudio() {
+            elements.audioPlayer.play()
+                .then(() => {
+                    state.isPlaying = true;
+                    elements.playIcon.style.display = 'none';
+                    elements.pauseIcon.style.display = 'block';
+                    elements.btnPlay.classList.add('btn-playing');
+                })
+                .catch(error => {
+                    console.error('Playback failed:', error);
+                    // Mark this track as having an error
+                    if (state.currentTrackIndex >= 0) {
+                        const track = state.queue[state.currentTrackIndex];
+                        state.trackErrors.add(track.id);
+                        renderQueue();
+                    }
+                    showNotification('Playback failed. Skipping to next track.', true);
+                    setTimeout(playNext, 1000);
+                });
+        }
+
+        // Pause audio
+        function pauseAudio() {
+            elements.audioPlayer.pause();
+            state.isPlaying = false;
+            elements.playIcon.style.display = 'block';
+            elements.pauseIcon.style.display = 'none';
+            elements.btnPlay.classList.remove('btn-playing');
+        }
+
+        // Play next track
+        function playNext() {
+            if (state.queue.length === 0) return;
+            
+            let nextIndex = state.currentTrackIndex + 1;
+            if (nextIndex >= state.queue.length) {
+                nextIndex = 0; // Loop back to beginning
+            }
+            
+            // Skip tracks that have errors
+            let attempts = 0;
+            while (state.trackErrors.has(state.queue[nextIndex].id)) {
+                nextIndex = (nextIndex + 1) % state.queue.length;
+                attempts++;
+                
+                // Prevent infinite loop if all tracks have errors
+                if (attempts >= state.queue.length) {
+                    showNotification('All tracks in queue have playback errors', true);
+                    pauseAudio();
+                    return;
+                }
+            }
+            
+            playTrack(state.queue[nextIndex], nextIndex);
+        }
+
+        // Play previous track
+        function playPrevious() {
+            if (state.queue.length === 0) return;
+            
+            let prevIndex = state.currentTrackIndex - 1;
+            if (prevIndex < 0) {
+                prevIndex = state.queue.length - 1; // Loop to end
+            }
+            
+            // Skip tracks that have errors
+            let attempts = 0;
+            while (state.trackErrors.has(state.queue[prevIndex].id)) {
+                prevIndex = (prevIndex - 1 + state.queue.length) % state.queue.length;
+                attempts++;
+                
+                // Prevent infinite loop if all tracks have errors
+                if (attempts >= state.queue.length) {
+                    showNotification('All tracks in queue have playback errors', true);
+                    pauseAudio();
+                    return;
+                }
+            }
+            
+            playTrack(state.queue[prevIndex], prevIndex);
+        }
+
+        // Download track
+        function downloadTrack(track) {
+            const a = document.createElement('a');
+            a.href = track.url;
+            a.download = `${track.artist} - ${track.title}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Download current track
+        function downloadCurrentTrack() {
+            if (state.currentTrackIndex >= 0) {
+                downloadTrack(state.queue[state.currentTrackIndex]);
+            } else {
+                showNotification('No track is currently playing', true);
+            }
+        }
+
+        // Clear selection
+        function clearSelection() {
+            state.selectedNetlabels.clear();
+            renderNetlabels();
+            updateQueueFromSelection();
+            showNotification('Selection cleared');
+        }
+
+        // Change sort method
+        function changeSortMethod(method) {
+            state.sortBy = method;
+            sortNetlabels();
+            renderNetlabels();
+            
+            // Update active button
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === method);
+            });
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchTab(tab.dataset.tab);
+                });
+            });
+            
+            // Netlabel search
+            elements.netlabelSearch.addEventListener('input', (e) => {
+                filterNetlabels(e.target.value);
+            });
+            
+            // Track search
+            elements.trackSearch.addEventListener('input', (e) => {
+                showAutocompleteSuggestions(e.target.value);
+            });
+            
+            elements.trackSearch.addEventListener('focus', (e) => {
+                if (e.target.value.length >= 2) {
+                    showAutocompleteSuggestions(e.target.value);
+                }
+            });
+            
+            elements.trackSearch.addEventListener('blur', () => {
+                setTimeout(() => {
+                    elements.autocompleteList.style.display = 'none';
+                }, 200);
+            });
+            
+            elements.trackSearch.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    displaySearchResults(e.target.value);
+                    elements.autocompleteList.style.display = 'none';
+                }
+            });
+            
+            // Pagination buttons
+            elements.btnPrevPage.addEventListener('click', prevSearchPage);
+            elements.btnNextPage.addEventListener('click', nextSearchPage);
+            
+            // Sort buttons
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeSortMethod(btn.dataset.sort);
+                });
+            });
+            
+            // Select all button
+            elements.btnSelectAll.addEventListener('click', selectAllNetlabels);
+            
+            // Deselect all button
+            elements.btnDeselectAll.addEventListener('click', deselectAllNetlabels);
+            
+            // Shuffle all button
+            elements.btnShuffleAll.addEventListener('click', shuffleAllNetlabels);
+            
+            // Shuffle search results button
+            elements.btnShuffleSearch.addEventListener('click', shuffleSearchResults);
+            
+            // Shuffle favorites button
+            elements.btnShuffleFavorites.addEventListener('click', shuffleFavorites);
+            
+            // Clear favorites button
+            elements.btnClearFavorites.addEventListener('click', clearFavorites);
+            
+            // Favorite button
+            elements.btnFavorite.addEventListener('click', () => {
+                if (state.currentTrackIndex >= 0) {
+                    const track = state.queue[state.currentTrackIndex];
+                    toggleFavorite(track.id);
+                } else {
+                    showNotification('No track is currently playing', true);
+                }
+            });
+            
+            // Play/Pause button
+            elements.btnPlay.addEventListener('click', () => {
+                if (state.currentTrackIndex === -1 && state.queue.length > 0) {
+                    // If no track is selected, play the first one
+                    playTrack(state.queue[0], 0);
+                } else if (state.isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio();
+                }
+            });
+            
+            // Next button
+            elements.btnNext.addEventListener('click', playNext);
+            
+            // Previous button
+            elements.btnPrev.addEventListener('click', playPrevious);
+            
+            // Download current button
+            elements.btnDownloadCurrent.addEventListener('click', downloadCurrentTrack);
+            
+            // Shuffle button
+            elements.btnShuffle.addEventListener('click', shuffleQueue);
+            
+            // Clear queue button
+            elements.btnClearQueue.addEventListener('click', clearQueue);
+            
+            // Clear selection button
+            elements.btnClearSelection.addEventListener('click', clearSelection);
+            
+            // Share button
+            elements.btnShare.addEventListener('click', () => {
+                elements.shareUrl.select();
+                navigator.clipboard.writeText(elements.shareUrl.value)
+                    .then(() => {
+                        showNotification('Link copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                        showNotification('Failed to copy link', true);
+                    });
+            });
+            
+            // Progress bar
+            elements.progressContainer.addEventListener('click', (e) => {
+                const rect = elements.progressContainer.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                elements.audioPlayer.currentTime = percent * elements.audioPlayer.duration;
+            });
+            
+            // Audio player events
+            elements.audioPlayer.addEventListener('timeupdate', () => {
+                const currentTime = elements.audioPlayer.currentTime;
+                const duration = elements.audioPlayer.duration;
+                
+                if (duration) {
+                    const percent = (currentTime / duration) * 100;
+                    elements.progress.style.width = `${percent}%`;
+                    elements.currentTime.textContent = formatTime(currentTime);
+                    elements.duration.textContent = formatTime(duration);
+                }
+            });
+            
+            elements.audioPlayer.addEventListener('ended', playNext);
+            
+            elements.audioPlayer.addEventListener('error', () => {
+                // Mark this track as having an error
+                if (state.currentTrackIndex >= 0) {
+                    const track = state.queue[state.currentTrackIndex];
+                    state.trackErrors.add(track.id);
+                    renderQueue();
+                }
+                showNotification('Error playing track. Skipping to next.', true);
+                setTimeout(playNext, 1000);
+            });
+        }
+
+        // Initialize the application
+        function init() {
+            setupEventListeners();
+            fetchArchive();
+        }
+
+        // Start the app when the page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
